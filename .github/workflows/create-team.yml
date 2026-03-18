@@ -23,19 +23,47 @@ jobs:
             const teamName = core.getInput('team_name');
             const username = core.getInput('github_user');
 
-            // Create team
-            const team = await github.rest.teams.create({
-              org,
-              name: teamName,
-              privacy: "closed"
-            });
+            let teamSlug;
 
-            // Add user to team
+            try {
+              // 🔹 Try creating the team
+              const team = await github.rest.teams.create({
+                org,
+                name: teamName,
+                privacy: "closed"
+              });
+
+              teamSlug = team.data.slug;
+              core.info(`✅ Team created: ${teamName}`);
+
+            } catch (error) {
+              // 🔹 If team already exists, fetch it
+              if (error.status === 422) {
+                core.info(`⚠️ Team already exists, fetching existing team...`);
+
+                const teams = await github.paginate(
+                  github.rest.teams.list,
+                  { org }
+                );
+
+                const existingTeam = teams.find(t => t.name === teamName);
+
+                if (!existingTeam) {
+                  throw new Error(`❌ Team exists but not found in list`);
+                }
+
+                teamSlug = existingTeam.slug;
+              } else {
+                throw error;
+              }
+            }
+
+            // 🔹 Add user to team
             await github.rest.teams.addOrUpdateMembershipForUserInOrg({
               org,
-              team_slug: team.data.slug,
+              team_slug: teamSlug,
               username,
               role: "member"
             });
 
-            core.info(`Team ${teamName} created and user ${username} added`);
+            core.info(`✅ User ${username} added to team ${teamName}`);
