@@ -1,0 +1,41 @@
+name: Create GitHub Team
+
+on:
+  workflow_dispatch:
+    inputs:
+      team_name:
+        description: "Team name"
+        required: true
+      github_user:
+        description: "GitHub username"
+        required: true
+
+jobs:
+  create-team:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Team and Add User
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ORG_TOKEN }}
+          script: |
+            const org = "quantum-lab-x";
+            const teamName = core.getInput('team_name');
+            const username = core.getInput('github_user');
+
+            // Create team
+            const team = await github.rest.teams.create({
+              org,
+              name: teamName,
+              privacy: "closed"
+            });
+
+            // Add user to team
+            await github.rest.teams.addOrUpdateMembershipForUserInOrg({
+              org,
+              team_slug: team.data.slug,
+              username,
+              role: "member"
+            });
+
+            core.info(`Team ${teamName} created and user ${username} added`);
