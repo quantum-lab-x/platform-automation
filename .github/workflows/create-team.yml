@@ -17,7 +17,7 @@ jobs:
       - name: Create Team and Add User
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.ORG_TOKEN }}
+          github-token: ${{ secrets.ORG_ADMIN_TOKEN }}
           script: |
             const org = "quantum-lab-x";
             const teamName = core.getInput('team_name');
