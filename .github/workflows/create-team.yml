@@ -20,8 +20,10 @@ jobs:
           github-token: ${{ secrets.ORG_ADMIN_TOKEN }}
           script: |
             const org = "quantum-lab-x";
-            const teamName = core.getInput('team_name');
-            const username = core.getInput('github_user');
+
+            // ✅ FIX: Use workflow_dispatch inputs correctly
+            const teamName = context.payload.inputs.team_name;
+            const username = context.payload.inputs.github_user;
 
             if (!teamName || !username) {
               throw new Error("❌ team_name or github_user is empty");
